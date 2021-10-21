@@ -4,3 +4,15 @@ mwc-top-app-bar-fixed {
     --mdc-theme-primary: #b7009b;
     --mdc-theme-on-primary: white;
 }
+
+.btn-primary-theme {
+    background-color: #b7009b;
+    border: #b7009b;
+    color: white;
+}
+
+.btn-primary-theme:hover {
+    background-color: #7a0068;
+    border: #7a0068;
+    color: white;
+}
