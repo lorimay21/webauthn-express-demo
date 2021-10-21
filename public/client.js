@@ -20,6 +20,8 @@ export const _fetch = async (path, payload = '') => {
   if (res.status === 200) {
     // Server authentication succeeded
     return res.json();
+  } else if (res.status === 400) {
+    throw await res.json();
   } else {
     // Server authentication failed
     const result = await res.json();
@@ -32,7 +34,7 @@ export const registerCredential = async () => {
   const opts = {
     attestation: 'none',
     authenticatorSelection: {
-      authenticatorAttachment: 'platform',
+      authenticatorAttachment: 'cross-platform',
       userVerification: 'required',
       requireResidentKey: false
     }

@@ -63,15 +63,44 @@ const getOrigin = (userAgent) => {
 }
 
 /**
- * Check username, create a new account if it doesn't exist.
- * Set a `username` in the session.
+ * Check username and email, create a new account if it doesn't exist.
+ * Set a `username` and `email` in the session.
  **/
 router.post('/register/validate', (req, res) => {
+  const usernameRegex = /[a-zA-Z0-9-_]+/;
+  const emailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   const username = req.body.username;
+  const email = req.body.email;
 
-  // Only check username, no need to check password as this is a mock
-  if (!username || !/[a-zA-Z0-9-_]+/.test(username)) {
-    return res.status(400).send({ error: 'Bad request' });
+  // Validate credentials
+  let invalidUsername = !username || !usernameRegex.test(username);
+  let invalidEmail = !email || !emailRegex.test(email.toLowerCase());
+
+  // Check input data
+  if (invalidUsername && invalidEmail) {
+    return res.status(400).send({
+      error: 'Bad request',
+      validations: {
+        username: "Invalid username",
+        email: "Invalid email address",
+      }
+    });
+  } else if (invalidUsername) {
+    return res.status(400).send({
+      error: 'Bad request',
+      validations: {
+        username: "Invalid username",
+        email: "",
+      }
+    });
+  } else if (invalidEmail) {
+    return res.status(400).send({
+      error: 'Bad request',
+      validations: {
+        email: "Invalid email address",
+        username: "",
+      }
+    });
   } else {
     // See if account already exists
     let user = db.get('users').find({ username: username }).value();
@@ -80,7 +109,7 @@ router.post('/register/validate', (req, res) => {
     if (!user) {
       user = {
         username: username,
-        email: email_address,
+        email: email,
         id: base64url.encode(crypto.randomBytes(32)),
         credentials: [],
       };
@@ -88,8 +117,9 @@ router.post('/register/validate', (req, res) => {
       db.get('users').push(user).write();
     }
 
-    // Set username in the session
+    // Set data in the session
     req.session.username = username;
+    req.session.email = email;
 
     // If sign-in succeeded, redirect to `/home`.
     res.json(user);
