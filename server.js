@@ -26,12 +26,10 @@ app.use(session({
 
 app.use((req, res, next) => {
   if (process.env.PROJECT_DOMAIN) {
-    // process.env.HOSTNAME = `${process.env.PROJECT_DOMAIN}.glitch.me`;
-    process.env.HOSTNAME = `localhost`;
+    process.env.HOSTNAME = process.env.PROJECT_DOMAIN;
   } else {
     process.env.HOSTNAME = req.headers.host;
   }
-  console.log(process.env.HOSTNAME);
 
   const protocol = /^localhost/.test(process.env.HOSTNAME) ? 'http' : 'https';
   process.env.ORIGIN = `${protocol}://${process.env.HOSTNAME}`;
@@ -121,7 +119,7 @@ app.get('/.well-known/assetlinks.json', (req, res) => {
 app.use('/auth', auth);
 
 // listen for req :)
-const port = process.env.GLITCH_DEBUGGER ? null : 8080;
-const listener = app.listen(port || process.env.PORT, () => {
+const port = process.env.PORT || 3000;
+const listener = app.listen(port, () => {
   console.log('Your app is listening on port ' + listener.address().port);
 });
