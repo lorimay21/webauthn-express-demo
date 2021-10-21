@@ -32,42 +32,64 @@
             <h1 class="text-center">Registration</h1>
 
             <!-- Registration form -->
-            <form id="form" method="POST" action="/auth/username">
-                <div class="js-form-selector my-5">
+            <form id="form" method="POST" action="/auth/register/validate">
+                <div class="mdc-text-field form-block my-5">
                     <div class="form-group my-3">
-                        <label for="email_address">Email address <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" id="email_address" placeholder="Email address">
+                        <label for="username">
+                            <strong>Username </strong>
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control mdc-text-field__input" id="username" name="username"
+                            placeholder="Username">
+                        <span id="username-error" class="error-message"></span>
                     </div>
                     <div class="form-group my-3">
-                        <label for="username">Username <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="username" placeholder="Username">
+                        <label for="email">
+                            <strong>Email address </strong>
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control mdc-text-field__input" id="email" name="email"
+                            placeholder="Email Address">
+                        <span id="email-error" class="error-message"></span>
                     </div>
                 </div>
 
                 <div class="text-center">
-                    <button type="submit" class="btn btn-primary w-50">Register</button>
+                    <button type="submit" class="btn btn-primary-theme w-50">Register</button>
                 </div>
             </form>
-
-            <!-- <form id="form" method="POST" action="/auth/username">
-                <div class="mdc-text-field mdc-text-field--filled">
-                    <span class="mdc-text-field__ripple"></span>
-                    <label class="mdc-floating-label" id="username-label">username</label>
-                    <input type="text" class="mdc-text-field__input" aria-labelledby="username-label" name="username" />
-                    <span class="mdc-line-ripple"></span>
-                </div>
-
-                <input type="submit" class="mdc-button mdc-button--raised" value="Next" />
-            </form> -->
         </div>
     </main>
 
     <script type="module">
-        new mdc.textField.MDCTextField(document.querySelector('.js-form-selector'));
+        new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
         import { _fetch } from '/client.js';
 
         const form = document.querySelector('#form');
+        const submitBtn = document.querySelector('button[type=submit]');
 
+        // Disable button
+        submitBtn.disabled = true;
+
+        /**
+         * Register button disabling event listener
+         */
+        form.addEventListener('keyup', e => {
+            e.preventDefault();
+
+            const username = document.querySelector('#username');
+            const email = document.querySelector('#email');
+
+            if (username.value.length > 0 && email.value.length > 0) {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        });
+
+        /**
+         * Form submission event listener
+         */
         form.addEventListener('submit', e => {
             e.preventDefault();
 
@@ -80,7 +102,12 @@
                 .then(user => {
                     location.href = '/reauth';
                 }).catch(e => {
-                    alert(e);
+                    let usernameError = document.querySelector('#username-error');
+                    let emailError = document.querySelector('#email-error');
+
+                    // Set error messages
+                    usernameError.innerHTML = e.validations.username;
+                    emailError.innerHTML = e.validations.email;
                 });
         });
     </script>
