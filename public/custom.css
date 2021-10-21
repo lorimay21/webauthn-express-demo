@@ -5,6 +5,10 @@ mwc-top-app-bar-fixed {
     --mdc-theme-on-primary: white;
 }
 
+input.form-control {
+    height: 38px !important;
+}
+
 .btn-primary-theme {
     background-color: #b7009b;
     border: #b7009b;
@@ -15,4 +19,13 @@ mwc-top-app-bar-fixed {
     background-color: #7a0068;
     border: #7a0068;
     color: white;
+}
+
+.form-block {
+    display: block !important;
+}
+
+.error-message {
+    font-size: 14px;
+    color: red;
 }
