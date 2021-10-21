@@ -1,0 +1,6 @@
+/* Custom CSS file */
+
+mwc-top-app-bar-fixed {
+    --mdc-theme-primary: #b7009b;
+    --mdc-theme-on-primary: white;
+}
