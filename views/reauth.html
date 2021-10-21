@@ -20,6 +20,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"
         integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13"
         crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 
 <body class="mdc-typography">
@@ -30,29 +31,38 @@
     <main class="content my-5">
         <div class="container">
             <div id="uvpa_available" class="hidden">
-                <h2>Verify your identity</h2>
-                <div>
-                    <mwc-button id="reauth" raised>Authenticate</mwc-button>
-                </div>
-                <div>
-                    <mwc-button id="cancel">Sign-in with password</mwc-button>
+                <h1 class="text-center">Verify your identity</h1>
+
+                <div class="mt-5 text-center d-block">
+                    <button type="button" id="reauth" class="btn btn-primary-theme w-75 m-1">Authenticate</button>
+                    <button type="button" id="cancel" class="btn btn-secondary w-75 m-1">Sign-in with password</button>
                 </div>
             </div>
 
+            <!-- Password form -->
             <form id="form" method="POST" action="/auth/password" class="hidden">
-                <h2>
-                    Enter a password
-                </h2>
-                <input type="hidden" name="username" value="{{username}}" />
-                <div class="mdc-text-field mdc-text-field--filled">
-                    <span class="mdc-text-field__ripple"></span>
-                    <label class="mdc-floating-label" id="password-label">password</label>
-                    <input type="password" class="mdc-text-field__input" aria-labelledby="password-label"
-                        name="password" />
-                    <span class="mdc-line-ripple"></span>
+                <div class="text-center">
+                    <h1>Enter a password</h1>
+                    <span class="text-secondary">(For backup purposes)</span>
                 </div>
-                <input type="submit" class="mdc-button mdc-button--raised" value="Sign-In" />
-                <p class="instructions">password will be ignored in this demo.</p>
+
+                <input type="hidden" name="username" value="{{username}}" />
+
+                <div class="mdc-text-field form-block my-5">
+                    <div class="form-group my-3">
+                        <label for="password">
+                            <strong>Password </strong>
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="password" class="form-control mdc-text-field__input" id="password" name="password"
+                            placeholder="Password">
+                        <span id="password-error" class="error-message"></span>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary-theme w-50">Register</button>
+                </div>
             </form>
         </div>
     </main>
@@ -62,11 +72,20 @@
         import { _fetch, authenticate } from '/client.js';
 
         const form = document.querySelector('#form');
+        const cancel = document.querySelector('#cancel');
+        const button = document.querySelector('#reauth');
+
+        /**
+         * Form submission event listener
+         */
         form.addEventListener('submit', e => {
             e.preventDefault();
+
             const form = new FormData(e.target);
             const cred = {};
+
             form.forEach((v, k) => cred[k] = v);
+
             _fetch(e.target.action, cred)
                 .then(user => {
                     location.href = '/home';
@@ -89,7 +108,9 @@
             form.classList.remove('hidden');
         }
 
-        const cancel = document.querySelector('#cancel');
+        /**
+         * Cancellation event listener
+         */
         cancel.addEventListener('click', e => {
             form.classList.remove('hidden');
             document
@@ -97,7 +118,9 @@
                 .classList.add('hidden');
         });
 
-        const button = document.querySelector('#reauth');
+        /**
+         * Reauthenticate event listener
+         */
         button.addEventListener('click', e => {
             authenticate().then(user => {
                 if (user) {
@@ -107,7 +130,9 @@
                 }
             }).catch(e => {
                 console.error(e.message || e);
+
                 alert('Authentication failed. Use password to sign-in.');
+
                 form.classList.remove('hidden');
                 document.querySelector('#uvpa_available').classList.add('hidden');
             });
