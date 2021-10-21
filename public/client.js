@@ -34,7 +34,7 @@ export const registerCredential = async () => {
   const opts = {
     attestation: 'none',
     authenticatorSelection: {
-      authenticatorAttachment: 'cross-platform',
+      authenticatorAttachment: 'platform',
       userVerification: 'required',
       requireResidentKey: false
     }
