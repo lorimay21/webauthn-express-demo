@@ -30,15 +30,19 @@
     <main class="content my-5">
         <div class="container">
             <h2>Welcome, {{username}}!</h2>
+
             <p id="uvpa_unavailable" class="hidden">
                 This device does not support User Verifying Platform Authenticator. You can't register a credential.
             </p>
-            <h3 class="mdc-typography mdc-typography--headline6">
+
+            <h3 class="mdc-typography mdc-typography--headline6 mt-5">
                 Your registered credentials:
             </h3>
+
             <section>
                 <div id="list"></div>
             </section>
+
             <mwc-button id="register" class="hidden" icon="fingerprint" raised>Add a credential</mwc-button>
             <mwc-button raised><a href="/reauth">Try reauth</a></mwc-button>
             <mwc-button><a href="/auth/signout">Sign out</a></mwc-button>
@@ -72,15 +76,15 @@
             const res = await _fetch('/auth/getKeys');
             const list = document.querySelector('#list');
             const creds = html`${res.credentials.length > 0 ? res.credentials.map(cred => html`
-          <div class="mdc-card credential">
-            <span class="mdc-typography mdc-typography--body2">${cred.credId}</span>
-            <pre class="public-key">${cred.publicKey}</pre>
-            <div class="mdc-card__actions">
-              <mwc-button id="${cred.credId}" @click="${removeCredential}" raised>Remove</mwc-button>
-            </div>
-          </div>`) : html`
-          <p>No credentials found.</p>
-          `}`;
+                <div class="mdc-card credential">
+                    <span class="mdc-typography mdc-typography--body2">${cred.credId}</span>
+                    <pre class="public-key">${cred.publicKey}</pre>
+                    <div class="mdc-card__actions">
+                    <mwc-button id="${cred.credId}" @click="${removeCredential}" raised>Remove</mwc-button>
+                    </div>
+                </div>`) : html`
+                <p>No credentials found.</p>
+            `}`;
             render(creds, list);
         };
 
