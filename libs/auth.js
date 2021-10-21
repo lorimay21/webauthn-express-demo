@@ -27,9 +27,9 @@ db.defaults({
 
 const csrfCheck = (req, res, next) => {
   if (req.header('X-Requested-With') != 'XMLHttpRequest') {
-    res.status(400).json({ error: 'invalid access.' });
-    return;
+    return res.status(400).json({ error: 'invalid access.' });
   }
+
   next();
 };
 
@@ -39,23 +39,26 @@ const csrfCheck = (req, res, next) => {
  **/
 const sessionCheck = (req, res, next) => {
   if (!req.session['signed-in']) {
-    res.status(401).json({ error: 'not signed in.' });
-    return;
+    return res.status(401).json({ error: 'not signed in.' });
   }
+
   next();
 };
 
 const getOrigin = (userAgent) => {
   let origin = '';
+
   if (userAgent.indexOf('okhttp') === 0) {
     const octArray = process.env.ANDROID_SHA256HASH.split(':').map((h) =>
       parseInt(h, 16),
     );
+
     const androidHash = base64url.encode(octArray);
     origin = `android:apk-key-hash:${androidHash}`;
   } else {
     origin = process.env.ORIGIN;
   }
+
   return origin;
 }
 
@@ -63,26 +66,31 @@ const getOrigin = (userAgent) => {
  * Check username, create a new account if it doesn't exist.
  * Set a `username` in the session.
  **/
-router.post('/username', (req, res) => {
+router.post('/register/validate', (req, res) => {
   const username = req.body.username;
+
   // Only check username, no need to check password as this is a mock
   if (!username || !/[a-zA-Z0-9-_]+/.test(username)) {
-    res.status(400).send({ error: 'Bad request' });
-    return;
+    return res.status(400).send({ error: 'Bad request' });
   } else {
     // See if account already exists
     let user = db.get('users').find({ username: username }).value();
+
     // If user entry is not created yet, create one
     if (!user) {
       user = {
         username: username,
+        email: email_address,
         id: base64url.encode(crypto.randomBytes(32)),
         credentials: [],
       };
+
       db.get('users').push(user).write();
     }
+
     // Set username in the session
     req.session.username = username;
+
     // If sign-in succeeded, redirect to `/home`.
     res.json(user);
   }
@@ -95,14 +103,13 @@ router.post('/username', (req, res) => {
  **/
 router.post('/password', (req, res) => {
   if (!req.body.password) {
-    res.status(401).json({ error: 'Enter at least one random letter.' });
-    return;
+    return res.status(401).json({ error: 'Enter at least one random letter.' });
   }
+
   const user = db.get('users').find({ username: req.session.username }).value();
 
   if (!user) {
-    res.status(401).json({ error: 'Enter username first.' });
-    return;
+    return res.status(401).json({ error: 'Enter username first.' });
   }
 
   req.session['signed-in'] = 'yes';
@@ -112,6 +119,7 @@ router.post('/password', (req, res) => {
 router.get('/signout', (req, res) => {
   // Remove the session
   req.session.destroy();
+
   // Redirect to `/`
   res.redirect(302, '/');
 });
@@ -203,8 +211,10 @@ router.get('/resetDB', (req, res) => {
 router.post('/registerRequest', csrfCheck, sessionCheck, async (req, res) => {
   const username = req.session.username;
   const user = db.get('users').find({ username: username }).value();
+
   try {
     const excludeCredentials = [];
+
     if (user.credentials.length > 0) {
       for (let cred of user.credentials) {
         excludeCredentials.push({
@@ -214,12 +224,14 @@ router.post('/registerRequest', csrfCheck, sessionCheck, async (req, res) => {
         });
       }
     }
+
     const pubKeyCredParams = [];
-    // const params = [-7, -35, -36, -257, -258, -259, -37, -38, -39, -8];
     const params = [-7, -257];
+
     for (let param of params) {
       pubKeyCredParams.push({ type: 'public-key', alg: param });
     }
+
     const as = {}; // authenticatorSelection
     const aa = req.body.authenticatorSelection.authenticatorAttachment;
     const rr = req.body.authenticatorSelection.requireResidentKey;
@@ -233,17 +245,21 @@ router.post('/registerRequest', csrfCheck, sessionCheck, async (req, res) => {
       asFlag = true;
       as.authenticatorAttachment = aa;
     }
+
     if (rr && typeof rr == 'boolean') {
       asFlag = true;
       as.requireResidentKey = rr;
     }
+
     if (uv && (uv == 'required' || uv == 'preferred' || uv == 'discouraged')) {
       asFlag = true;
       as.userVerification = uv;
     }
+
     if (asFlag) {
       authenticatorSelection = as;
     }
+
     if (cp && (cp == 'none' || cp == 'indirect' || cp == 'direct')) {
       attestation = cp;
     }
@@ -368,15 +384,13 @@ router.post('/signinRequest', csrfCheck, async (req, res) => {
 
     if (!user) {
       // Send empty response if user is not registered yet.
-      res.json({ error: 'User not found.' });
-      return;
+      return res.json({ error: 'User not found.' });
     }
 
     const credId = req.query.credId;
-
     const userVerification = req.body.userVerification || 'required';
-
     const allowCredentials = [];
+
     for (let cred of user.credentials) {
       // `credId` is specified and matches
       if (credId && cred.credId == credId) {

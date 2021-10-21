@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use(express.static('dist'));
 app.use(session({
-  secret: 'secret', // You should specify a real secret here
+  secret: 'secret',
   resave: true,
   saveUninitialized: false,
   proxy: true,
@@ -51,9 +51,7 @@ app.get('/', (req, res) => {
   // Check session
   if (req.session.username) {
     // If user is signed in, redirect to `/reauth`.
-    res.redirect(307, '/reauth');
-
-    return;
+    return res.redirect(307, '/reauth');
   }
 
   // If user is not signed in, show `index.html` with id/password form.
@@ -63,9 +61,7 @@ app.get('/', (req, res) => {
 app.get('/home', (req, res) => {
   if (!req.session.username || req.session['signed-in'] != 'yes') {
     // If user is not signed in, redirect to `/`.
-    res.redirect(307, '/');
-
-    return;
+    return res.redirect(307, '/');
   }
 
   // `home.html` shows sign-out link
@@ -76,9 +72,7 @@ app.get('/reauth', (req, res) => {
   const username = req.session.username;
 
   if (!username) {
-    res.redirect(302, '/');
-
-    return;
+    return res.redirect(302, '/');
   }
 
   // Show `reauth.html`.
