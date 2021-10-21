@@ -36,16 +36,21 @@
             </p>
 
             <h3 class="mdc-typography mdc-typography--headline6 mt-5">
-                Your registered credentials:
+                Public key credentials:
             </h3>
 
             <section>
                 <div id="list"></div>
             </section>
 
-            <mwc-button id="register" class="hidden" icon="fingerprint" raised>Add a credential</mwc-button>
+            <div class="mt-5 text-center d-block">
+                <button type="button" id="register" class="btn btn-primary-theme w-75 m-1 hidden">Add credential</button>
+                <a href="/reauth" class="btn btn-secondary w-75 m-1">Try reauth</a>
+                <a href="/auth/signout" class="btn btn-secondary w-75 m-1">Sign out</a>
+            </div>
+            <!-- <mwc-button id="register" class="hidden" icon="fingerprint" raised>Add a credential</mwc-button>
             <mwc-button raised><a href="/reauth">Try reauth</a></mwc-button>
-            <mwc-button><a href="/auth/signout">Sign out</a></mwc-button>
+            <mwc-button><a href="/auth/signout">Sign out</a></mwc-button> -->
         </div>
     </main>
 
@@ -85,6 +90,7 @@
                 </div>`) : html`
                 <p>No credentials found.</p>
             `}`;
+
             render(creds, list);
         };
 

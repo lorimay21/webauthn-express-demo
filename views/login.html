@@ -31,17 +31,8 @@
         <div class="container">
             <h1 class="text-center">Login</h1>
 
-            <!-- <form id="form" method="POST" action="/auth/register/validate">
+            <form id="form" method="POST" action="/auth/login/validate">
                 <div class="mdc-text-field form-block mt-5">
-                    <div class="form-group my-3">
-                        <label for="username">
-                            <strong>Username </strong>
-                            <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" class="form-control mdc-text-field__input" id="username" name="username"
-                            placeholder="Username">
-                        <span id="username-error" class="error-message"></span>
-                    </div>
                     <div class="form-group my-3">
                         <label for="email">
                             <strong>Email address </strong>
@@ -54,66 +45,55 @@
                 </div>
 
                 <div class="text-center mt-4">
-                    Already registered?
-                    <a href="/login" class="login-link">Login here</a>
+                    <button type="submit" class="btn btn-primary-theme w-50">Login</button>
                 </div>
-
-                <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-primary-theme w-50">Next</button>
-                </div>
-            </form> -->
+            </form>
         </div>
     </main>
 
     <script type="module">
-        // new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
-        // import { _fetch } from '/client.js';
+        new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
+        import { _fetch } from '/client.js';
 
-        // const form = document.querySelector('#form');
-        // const submitBtn = document.querySelector('button[type=submit]');
+        const form = document.querySelector('#form');
+        const submitBtn = document.querySelector('button[type=submit]');
 
-        // // Disable button
-        // submitBtn.disabled = true;
+        // Disable button
+        submitBtn.disabled = true;
 
-        // /**
-        //  * Next button disabling event listener
-        //  */
-        // form.addEventListener('keyup', e => {
-        //     e.preventDefault();
+        /**
+         * Login button disabling event listener
+         */
+        form.addEventListener('keyup', e => {
+            e.preventDefault();
 
-        //     const username = document.querySelector('#username');
-        //     const email = document.querySelector('#email');
+            const email = document.querySelector('#email');
 
-        //     if (username.value.length > 0 && email.value.length > 0) {
-        //         submitBtn.disabled = false;
-        //     } else {
-        //         submitBtn.disabled = true;
-        //     }
-        // });
+            if (email.value.length > 0) {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        });
 
-        // /**
-        //  * Form submission event listener
-        //  */
-        // form.addEventListener('submit', e => {
-        //     e.preventDefault();
+        /**
+         * Form submission event listener
+         */
+        form.addEventListener('submit', e => {
+            e.preventDefault();
 
-        //     const form = new FormData(e.target);
-        //     const cred = {};
+            const form = new FormData(e.target);
+            const cred = {};
 
-        //     form.forEach((v, k) => cred[k] = v);
+            form.forEach((v, k) => cred[k] = v);
 
-        //     _fetch(e.target.action, cred)
-        //         .then(user => {
-        //             location.href = '/reauth';
-        //         }).catch(e => {
-        //             let usernameError = document.querySelector('#username-error');
-        //             let emailError = document.querySelector('#email-error');
-
-        //             // Set error messages
-        //             usernameError.innerHTML = e.validations.username;
-        //             emailError.innerHTML = e.validations.email;
-        //         });
-        // });
+            _fetch(e.target.action, cred)
+                .then(user => {
+                    location.href = '/home';
+                }).catch(e => {
+                    alert("Failed to authenticate");
+                });
+        });
     </script>
 </body>
 
