@@ -85,36 +85,35 @@ const getOrigin = (userAgent) => {
 }
 
 /**
- * Check username and email, create a new account if it doesn't exist.
- * Set a `username` and `email` in the session.
+ * Check name and email, create a new account if it doesn't exist.
+ * Set a `name` and `email` in the session.
  *
  * @param {*} req 
  * @param {*} res 
  */
 router.post('/register/validate', (req, res) => {
-  const usernameRegex = /[a-zA-Z0-9-_]+/;
   const emailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  const username = req.body.username;
+  const name = req.body.name;
   const email = req.body.email;
 
   // Validate credentials
-  let invalidUsername = !username || !usernameRegex.test(username);
+  let invalidName = !name;
   let invalidEmail = !email || !emailRegex.test(email.toLowerCase());
 
   // Check input data
-  if (invalidUsername && invalidEmail) {
+  if (invalidName && invalidEmail) {
     return res.status(400).send({
       error: 'Bad request',
       validations: {
-        username: "Invalid username",
+        name: "Invalid name",
         email: "Invalid email address",
       }
     });
-  } else if (invalidUsername) {
+  } else if (invalidName) {
     return res.status(400).send({
       error: 'Bad request',
       validations: {
-        username: "Invalid username",
+        name: "Invalid name",
         email: "",
       }
     });
@@ -123,28 +122,36 @@ router.post('/register/validate', (req, res) => {
       error: 'Bad request',
       validations: {
         email: "Invalid email address",
-        username: "",
+        name: "",
       }
     });
   } else {
-    // See if account already exists
-    let user = db.get('users').find({ username: username }).value();
+    // See if account already exists using email address
+    let user = db.get('users').find({ email: email }).value();
 
-    // If user entry is not created yet, create one
-    if (!user) {
-      user = {
-        username: username,
-        email: email,
-        password: null, // set to null temporarily
-        id: base64url.encode(crypto.randomBytes(32)),
-        credentials: [],
-      };
-
-      db.get('users').push(user).write();
+    if (user) {
+      return res.status(400).send({
+        error: 'Bad request',
+        validations: {
+          email: "Email address already exist",
+          name: "",
+        }
+      });
     }
 
+    // Register new user
+    user = {
+      name: name,
+      email: email,
+      password: null, // set to null temporarily
+      id: base64url.encode(crypto.randomBytes(32)),
+      credentials: [],
+    };
+
+    db.get('users').push(user).write();
+
     // Set data in the session
-    req.session.username = username;
+    req.session.name = name;
     req.session.email = email;
 
     // If sign-in succeeded, redirect to `/home`.
@@ -178,7 +185,7 @@ router.post('/login/validate', (req, res) => {
     }
 
     // Set data in the session
-    req.session.username = user.username;
+    req.session.name = user.name;
     req.session.email = user.email;
 
     // If sign-in succeeded, redirect to `/home`.
@@ -194,25 +201,26 @@ router.post('/login/validate', (req, res) => {
  */
 router.post('/password', (req, res) => {
   let password = req.body.password;
-  let username = req.session.username;
+  let name = req.session.name;
+  let email = req.session.email;
 
   if (!password) {
     return res.status(401).json({ error: 'Enter at least one random letter.' });
   }
 
-  const user = db.get('users').find({ username: username }).value();
+  const user = db.get('users').find({ email: email }).value();
 
   if (!user) {
-    return res.status(401).json({ error: 'Enter username first.' });
+    return res.status(401).json({ error: 'Enter email first.' });
   }
 
-  if (user.password == null) {
+  if (user.password === null) {
     // Encrypt password then save
     let encryptedPass = cryptoJS.AES.encrypt(password, "Secret Passphrase");
 
     // Update password
     db.get('users')
-      .find({ username: username })
+      .find({ email: email })
       .assign({ password: encryptedPass.toString() })
       .write();
 
@@ -255,7 +263,7 @@ router.get('/signout', (req, res) => {
  * @param {*} res 
  **/
 router.post('/getKeys', csrfCheck, sessionCheck, (req, res) => {
-  const user = db.get('users').find({ username: req.session.username }).value();
+  const user = db.get('users').find({ email: req.session.email }).value();
   res.json(user || {});
 });
 
@@ -265,8 +273,8 @@ router.post('/getKeys', csrfCheck, sessionCheck, (req, res) => {
  **/
 router.post('/removeKey', csrfCheck, sessionCheck, (req, res) => {
   const credId = req.query.credId;
-  const username = req.session.username;
-  const user = db.get('users').find({ username: username }).value();
+  const email = req.session.email;
+  const user = db.get('users').find({ email: email }).value();
 
   const newCreds = user.credentials.filter((cred) => {
     // Leave credential ids that do not match
@@ -274,7 +282,7 @@ router.post('/removeKey', csrfCheck, sessionCheck, (req, res) => {
   });
 
   db.get('users')
-    .find({ username: username })
+    .find({ email: email })
     .assign({ credentials: newCreds })
     .write();
 
@@ -326,8 +334,8 @@ router.get('/resetDB', (req, res) => {
  * }```
  **/
 router.post('/registerRequest', csrfCheck, sessionCheck, async (req, res) => {
-  const username = req.session.username;
-  const user = db.get('users').find({ username: username }).value();
+  const email = req.session.email;
+  const user = db.get('users').find({ email: email }).value();
 
   try {
     const excludeCredentials = [];
@@ -385,7 +393,7 @@ router.post('/registerRequest', csrfCheck, sessionCheck, async (req, res) => {
       rpName: process.env.APP_NAME,
       rpID: process.env.HOSTNAME,
       userID: user.id,
-      userName: user.username,
+      userName: user.name,
       timeout: TIMEOUT,
       // Prompt users for additional information about the authenticator.
       attestationType: attestation,
@@ -424,7 +432,7 @@ router.post('/registerRequest', csrfCheck, sessionCheck, async (req, res) => {
  * }```
  **/
 router.post('/registerResponse', csrfCheck, sessionCheck, async (req, res) => {
-  const username = req.session.username;
+  const email = req.session.email;
   const expectedChallenge = req.session.challenge;
   const expectedOrigin = getOrigin(req.get('User-Agent'));
   const expectedRPID = process.env.HOSTNAME;
@@ -449,7 +457,7 @@ router.post('/registerResponse', csrfCheck, sessionCheck, async (req, res) => {
 
     const { base64PublicKey, base64CredentialID, counter } = authenticatorInfo;
 
-    const user = db.get('users').find({ username: username }).value();
+    const user = db.get('users').find({ email: email }).value();
 
     const existingCred = user.credentials.find(
       (cred) => cred.credID === base64CredentialID,
@@ -466,7 +474,7 @@ router.post('/registerResponse', csrfCheck, sessionCheck, async (req, res) => {
       });
     }
 
-    db.get('users').find({ username: username }).assign(user).write();
+    db.get('users').find({ email: email }).assign(user).write();
 
     delete req.session.challenge;
 
@@ -496,7 +504,7 @@ router.post('/signinRequest', csrfCheck, async (req, res) => {
   try {
     const user = db
       .get('users')
-      .find({ username: req.session.username })
+      .find({ email: req.session.email })
       .value();
 
     if (!user) {
@@ -559,7 +567,7 @@ router.post('/signinResponse', csrfCheck, async (req, res) => {
   const expectedRPID = process.env.HOSTNAME;
 
   // Query the user
-  const user = db.get('users').find({ username: req.session.username }).value();
+  const user = db.get('users').find({ email: req.session.email }).value();
 
   let credential = user.credentials.find((cred) => cred.credId === req.body.id);
 
@@ -584,7 +592,7 @@ router.post('/signinResponse', csrfCheck, async (req, res) => {
 
     credential.prevCounter = authenticatorInfo.counter;
 
-    db.get('users').find({ username: req.session.username }).assign(user).write();
+    db.get('users').find({ email: req.session.email }).assign(user).write();
 
     delete req.session.challenge;
     req.session['signed-in'] = 'yes';

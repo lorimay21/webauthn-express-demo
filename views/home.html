@@ -30,7 +30,7 @@
 
     <main class="content my-5">
         <div class="container">
-            <h2>Welcome, {{username}}!</h2>
+            <h2>Welcome, {{name}}!</h2>
 
             <p id="uvpa_unavailable" class="hidden">
                 This device does not support User Verifying Platform Authenticator. You can't register a credential.
@@ -46,7 +46,7 @@
 
             <div class="mt-5 text-center d-block">
                 <button type="button" id="register" class="btn btn-primary-theme w-50 m-1 hidden">
-                    <i class="fas fa-plus"></i> Add credential
+                    <i class="fa fa-plus"></i> Add credential
                 </button>
                 <a href="/reauth" class="btn btn-primary-theme w-75 m-1">Reauthenticate</a>
                 <a href="/auth/signout" class="btn btn-secondary w-75 m-1">Sign out</a>
@@ -85,7 +85,7 @@
                     <span class="mdc-typography mdc-typography--body2">${cred.credId}</span>
                     <pre class="public-key">${cred.publicKey}</pre>
                     <div class="mdc-card__actions">
-                    <button type="button" id="${cred.credId}" class="btn btn-primary-theme w-50 m-1" @click="${removeCredential}"><i class="fas fa-trash"></i> Delete</button>
+                    <button type="button" id="${cred.credId}" class="btn btn-sm btn-danger m-1" @click="${removeCredential}"><i class="fa fa-trash"></i> Delete</button>
                     </div>
                 </div>`) : html`
                 <p>No credentials found.</p>

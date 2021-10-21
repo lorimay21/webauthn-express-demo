@@ -35,13 +35,13 @@
             <form id="form" method="POST" action="/auth/register/validate">
                 <div class="mdc-text-field form-block mt-5">
                     <div class="form-group my-3">
-                        <label for="username">
-                            <strong>Username </strong>
+                        <label for="name">
+                            <strong>Name </strong>
                             <span class="text-danger">*</span>
                         </label>
-                        <input type="text" class="form-control mdc-text-field__input" id="username" name="username"
-                            placeholder="Username">
-                        <span id="username-error" class="error-message"></span>
+                        <input type="text" class="form-control mdc-text-field__input" id="name" name="name"
+                            placeholder="Name">
+                        <span id="name-error" class="error-message"></span>
                     </div>
                     <div class="form-group my-3">
                         <label for="email">
@@ -82,10 +82,10 @@
         form.addEventListener('keyup', e => {
             e.preventDefault();
 
-            const username = document.querySelector('#username');
+            const name = document.querySelector('#name');
             const email = document.querySelector('#email');
 
-            if (username.value.length > 0 && email.value.length > 0) {
+            if (name.value.length > 0 && email.value.length > 0) {
                 submitBtn.disabled = false;
             } else {
                 submitBtn.disabled = true;
@@ -107,11 +107,11 @@
                 .then(user => {
                     location.href = '/reauth';
                 }).catch(e => {
-                    let usernameError = document.querySelector('#username-error');
+                    let nameError = document.querySelector('#name-error');
                     let emailError = document.querySelector('#email-error');
 
                     // Set error messages
-                    usernameError.innerHTML = e.validations.username;
+                    nameError.innerHTML = e.validations.name;
                     emailError.innerHTML = e.validations.email;
                 });
         });

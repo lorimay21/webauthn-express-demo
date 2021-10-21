@@ -60,7 +60,7 @@ app.use((req, res, next) => {
  */
 app.get('/', (req, res) => {
   // Check session
-  if (req.session.username) {
+  if (req.session.email) {
     // If user is signed in, redirect to `/reauth`.
     return res.redirect(307, '/reauth');
   }
@@ -92,13 +92,16 @@ app.get('/login', (req, res) => {
  * @param {*} res 
  */
 app.get('/home', (req, res) => {
-  if (!req.session.username || req.session['signed-in'] != 'yes') {
+  if (!req.session.email || !req.session.name || req.session['signed-in'] != 'yes') {
     // If user is not signed in, redirect to `/`.
     return res.redirect(307, '/');
   }
 
   // `home.html` shows sign-out link
-  res.render('home.html', { username: req.session.username });
+  res.render('home.html', { 
+    email: req.session.email,
+    name: req.session.name,
+  });
 });
 
 /**
@@ -111,13 +114,13 @@ app.get('/home', (req, res) => {
  * @param {*} res 
  */
 app.get('/reauth', (req, res) => {
-  const username = req.session.username;
+  const email = req.session.email;
 
-  if (!username) {
+  if (!email) {
     return res.redirect(302, '/');
   }
 
-  res.render('reauth.html', { username: username });
+  res.render('reauth.html', { email: email });
 });
 
 /**
