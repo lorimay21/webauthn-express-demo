@@ -24,6 +24,9 @@ app.use(session({
   }
 }));
 
+/**
+ * Initialize application info
+ */
 app.use((req, res, next) => {
   if (process.env.PROJECT_DOMAIN) {
     process.env.HOSTNAME = process.env.PROJECT_DOMAIN;
@@ -46,7 +49,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// http://expressjs.com/en/starter/basic-routing.html
+/**
+ * Index page function
+ *
+ * Method: GET
+ * Route: /
+ *
+ * @param {*} req 
+ * @param {*} res 
+ */
 app.get('/', (req, res) => {
   // Check session
   if (req.session.username) {
@@ -58,10 +69,28 @@ app.get('/', (req, res) => {
   res.render('index.html');
 });
 
+/**
+ * Login page function
+ *
+ * Method: GET
+ * Route: /login
+ *
+ * @param {*} req 
+ * @param {*} res 
+ */
 app.get('/login', (req, res) => {
   res.render('login.html');
 });
 
+/**
+ * Home page function
+ *
+ * Method: GET
+ * Route: /home
+ *
+ * @param {*} req 
+ * @param {*} res 
+ */
 app.get('/home', (req, res) => {
   if (!req.session.username || req.session['signed-in'] != 'yes') {
     // If user is not signed in, redirect to `/`.
@@ -72,6 +101,15 @@ app.get('/home', (req, res) => {
   res.render('home.html', { username: req.session.username });
 });
 
+/**
+ * Reauthentication page function
+ *
+ * Method: GET
+ * Route: /reauth
+ *
+ * @param {*} req 
+ * @param {*} res 
+ */
 app.get('/reauth', (req, res) => {
   const username = req.session.username;
 
@@ -79,12 +117,15 @@ app.get('/reauth', (req, res) => {
     return res.redirect(302, '/');
   }
 
-  // Show `reauth.html`.
-  // User is supposed to enter a password (which will be ignored)
-  // Make XHR POST to `/signin`
   res.render('reauth.html', { username: username });
 });
 
+/**
+ * Get asset links
+ *
+ * @param {*} req 
+ * @param {*} res 
+ */
 app.get('/.well-known/assetlinks.json', (req, res) => {
   const assetlinks = [];
   const relation = [

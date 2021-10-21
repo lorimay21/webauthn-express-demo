@@ -21,10 +21,21 @@ router.use(express.json());
 
 const TIMEOUT = 30 * 1000 * 60;
 
+/**
+ * Initialize database
+ */
 db.defaults({
   users: [],
 }).write();
 
+/**
+ * Check CSRF
+ *
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ */
 const csrfCheck = (req, res, next) => {
   if (req.header('X-Requested-With') != 'XMLHttpRequest') {
     return res.status(400).json({ error: 'invalid access.' });
@@ -36,7 +47,12 @@ const csrfCheck = (req, res, next) => {
 /**
  * Checks CSRF protection using custom header `X-Requested-With`
  * If the session doesn't contain `signed-in`, consider the user is not authenticated.
- **/
+ *
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ */
 const sessionCheck = (req, res, next) => {
   if (!req.session['signed-in']) {
     return res.status(401).json({ error: 'not signed in.' });
@@ -45,6 +61,12 @@ const sessionCheck = (req, res, next) => {
   next();
 };
 
+/**
+ * Setup origin
+ *
+ * @param {*} userAgent 
+ * @returns 
+ */
 const getOrigin = (userAgent) => {
   let origin = '';
 
@@ -65,7 +87,10 @@ const getOrigin = (userAgent) => {
 /**
  * Check username and email, create a new account if it doesn't exist.
  * Set a `username` and `email` in the session.
- **/
+ *
+ * @param {*} req 
+ * @param {*} res 
+ */
 router.post('/register/validate', (req, res) => {
   const usernameRegex = /[a-zA-Z0-9-_]+/;
   const emailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -128,10 +153,45 @@ router.post('/register/validate', (req, res) => {
 });
 
 /**
+ * Authenticate a registered user in login page
+ *
+ * @param {*} req 
+ * @param {*} res 
+ */
+router.post('/login/validate', (req, res) => {
+  const emailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  const email = req.body.email;
+
+  // Validate credentials
+  let invalidEmail = !email || !emailRegex.test(email.toLowerCase());
+
+  // Check input data
+  if (invalidEmail) {
+    return res.status(401).json({ error: 'Failed to authenticate.' });
+  } else {
+    // See if account already exists
+    let user = db.get('users').find({ email: email }).value();
+
+    // Return error if account doesn't exist
+    if (!user) {
+      return res.status(401).json({ error: 'Failed to authenticate.' });
+    }
+
+    // Set data in the session
+    req.session.username = user.username;
+    req.session.email = user.email;
+
+    // If sign-in succeeded, redirect to `/home`.
+    res.json(user);
+  }
+});
+
+/**
  * Verifies user credential and let the user sign-in.
- * No preceding registration required.
- * This only checks if `username` is not empty string and ignores the password.
- **/
+ *
+ * @param {*} req 
+ * @param {*} res 
+ */
 router.post('/password', (req, res) => {
   let password = req.body.password;
   let username = req.session.username;
@@ -147,7 +207,7 @@ router.post('/password', (req, res) => {
   }
 
   if (user.password == null) {
-    // Encryypt password then save
+    // Encrypt password then save
     let encryptedPass = cryptoJS.AES.encrypt(password, "Secret Passphrase");
 
     // Update password
@@ -158,7 +218,7 @@ router.post('/password', (req, res) => {
 
     req.session['signed-in'] = 'yes';
   } else {
-    // Decrypt and check if password
+    // Decrypt and check if input password is correct
     let decryptedPass = cryptoJS.AES.decrypt(user.password, "Secret Passphrase");
 
     if (password === decryptedPass.toString(cryptoJS.enc.Utf8)) {
@@ -171,9 +231,18 @@ router.post('/password', (req, res) => {
   res.json(user);
 });
 
+/**
+ * Logout authenticated user
+ *
+ * @param {*} req 
+ * @param {*} res 
+ */
 router.get('/signout', (req, res) => {
   // Remove the session
   req.session.destroy();
+
+  // Clear local storage
+  localStorage.clear();
 
   // Redirect to `/`
   res.redirect(302, '/');
@@ -181,22 +250,9 @@ router.get('/signout', (req, res) => {
 
 /**
  * Returns a credential id
- * (This server only stores one key per username.)
- * Response format:
- * ```{
- *   username: String,
- *   credentials: [Credential]
- * }```
-
- Credential
- ```
- {
-   credId: String,
-   publicKey: String,
-   aaguid: ??,
-   prevCounter: Int
- };
- ```
+ *
+ * @param {*} req 
+ * @param {*} res 
  **/
 router.post('/getKeys', csrfCheck, sessionCheck, (req, res) => {
   const user = db.get('users').find({ username: req.session.username }).value();
@@ -225,6 +281,12 @@ router.post('/removeKey', csrfCheck, sessionCheck, (req, res) => {
   res.json({});
 });
 
+/**
+ * Reset database
+ *
+ * @param {*} req 
+ * @param {*} res 
+ */
 router.get('/resetDB', (req, res) => {
   db.set('users', []).write();
   const users = db.get('users').value();
