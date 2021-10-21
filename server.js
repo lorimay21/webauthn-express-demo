@@ -58,6 +58,10 @@ app.get('/', (req, res) => {
   res.render('index.html');
 });
 
+app.get('/login', (req, res) => {
+  res.render('login.html');
+});
+
 app.get('/home', (req, res) => {
   if (!req.session.username || req.session['signed-in'] != 'yes') {
     // If user is not signed in, redirect to `/`.
