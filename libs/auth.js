@@ -5,6 +5,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const fido2 = require('@simplewebauthn/server');
 const base64url = require('base64url');
+const cryptoJS = require('crypto-js');
 const fs = require('fs');
 const low = require('lowdb');
 
@@ -18,7 +19,6 @@ const db = low(adapter);
 
 router.use(express.json());
 
-const RP_NAME = 'WebAuthn Demo App';
 const TIMEOUT = 30 * 1000 * 60;
 
 db.defaults({
@@ -110,6 +110,7 @@ router.post('/register/validate', (req, res) => {
       user = {
         username: username,
         email: email,
+        password: null, // set to null temporarily
         id: base64url.encode(crypto.randomBytes(32)),
         credentials: [],
       };
@@ -132,17 +133,41 @@ router.post('/register/validate', (req, res) => {
  * This only checks if `username` is not empty string and ignores the password.
  **/
 router.post('/password', (req, res) => {
-  if (!req.body.password) {
+  let password = req.body.password;
+  let username = req.session.username;
+
+  if (!password) {
     return res.status(401).json({ error: 'Enter at least one random letter.' });
   }
 
-  const user = db.get('users').find({ username: req.session.username }).value();
+  const user = db.get('users').find({ username: username }).value();
 
   if (!user) {
     return res.status(401).json({ error: 'Enter username first.' });
   }
 
-  req.session['signed-in'] = 'yes';
+  if (user.password == null) {
+    // Encryypt password then save
+    let encryptedPass = cryptoJS.AES.encrypt(password, "Secret Passphrase");
+
+    // Update password
+    db.get('users')
+      .find({ username: username })
+      .assign({ password: encryptedPass.toString() })
+      .write();
+
+    req.session['signed-in'] = 'yes';
+  } else {
+    // Decrypt and check if password
+    let decryptedPass = cryptoJS.AES.decrypt(user.password, "Secret Passphrase");
+
+    if (password === decryptedPass.toString(cryptoJS.enc.Utf8)) {
+      req.session['signed-in'] = 'yes';
+    } else {
+      return res.status(401).json({ error: 'Failed to authenticate.' });
+    }
+  }
+
   res.json(user);
 });
 
@@ -295,7 +320,7 @@ router.post('/registerRequest', csrfCheck, sessionCheck, async (req, res) => {
     }
 
     const options = fido2.generateAttestationOptions({
-      rpName: RP_NAME,
+      rpName: process.env.APP_NAME,
       rpID: process.env.HOSTNAME,
       userID: user.id,
       userName: user.username,
