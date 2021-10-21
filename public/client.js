@@ -1,5 +1,12 @@
 /** Client JS file */
 
+/**
+ * Call and fetch promises
+ *
+ * @param {*} path 
+ * @param {*} payload 
+ * @returns 
+ */
 export const _fetch = async (path, payload = '') => {
   const headers = {
     'X-Requested-With': 'XMLHttpRequest',
@@ -30,6 +37,11 @@ export const _fetch = async (path, payload = '') => {
   }
 };
 
+/**
+ * Register user credentials
+ *
+ * @returns 
+ */
 export const registerCredential = async () => {
   const opts = {
     attestation: 'none',
@@ -75,12 +87,23 @@ export const registerCredential = async () => {
   return await _fetch('/auth/registerResponse', credential);
 };
 
+/**
+ * Unregister an existing credential
+ *
+ * @param {*} credId 
+ * @returns 
+ */
 export const unregisterCredential = async (credId) => {
   localStorage.removeItem('credId');
 
   return _fetch(`/auth/removeKey?credId=${encodeURIComponent(credId)}`);
 };
 
+/**
+ * Authenticate registered user
+ *
+ * @returns 
+ */
 export const authenticate = async () => {
   const opts = {};
   let url = '/auth/signinRequest';
