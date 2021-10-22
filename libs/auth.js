@@ -250,7 +250,7 @@ router.get('/signout', (req, res) => {
   req.session.destroy();
 
   // Clear local storage
-  localStorage.clear();
+  // localStorage.clear();
 
   // Redirect to `/`
   res.redirect(302, '/');
