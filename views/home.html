@@ -92,6 +92,9 @@
             `}`;
 
             render(creds, list);
+
+            // Hide add credential button
+            register.classList.add('hidden');
         };
 
         getCredentials();
@@ -100,6 +103,9 @@
             try {
                 await unregisterCredential(e.target.id);
                 getCredentials();
+
+                // Hide add credential button
+                register.classList.remove('hidden');
             } catch (e) {
                 alert(e);
             }
