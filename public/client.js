@@ -76,6 +76,7 @@ export const registerCredential = async () => {
       base64url.encode(cred.response.clientDataJSON);
     const attestationObject =
       base64url.encode(cred.response.attestationObject);
+
     credential.response = {
       clientDataJSON,
       attestationObject,
@@ -144,6 +145,7 @@ export const authenticate = async () => {
       base64url.encode(cred.response.signature);
     const userHandle =
       base64url.encode(cred.response.userHandle);
+
     credential.response = {
       clientDataJSON,
       authenticatorData,

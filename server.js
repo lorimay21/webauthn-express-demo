@@ -59,14 +59,28 @@ app.use((req, res, next) => {
  * @param {*} res 
  */
 app.get('/', (req, res) => {
+  // Redirect to registe page
+    return res.redirect('/register');
+});
+
+/**
+ * Register page function
+ *
+ * Method: GET
+ * Route: /register
+ *
+ * @param {*} req 
+ * @param {*} res 
+ */
+ app.get('/register', (req, res) => {
   // Check session
   if (req.session.email) {
     // If user is signed in, redirect to `/reauth`.
     return res.redirect(307, '/reauth');
   }
 
-  // If user is not signed in, show `index.html` with id/password form.
-  res.render('index.html');
+  // If user is not signed in, show `register.html` with id/password form.
+  res.render('register.html');
 });
 
 /**

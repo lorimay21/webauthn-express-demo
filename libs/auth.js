@@ -184,6 +184,8 @@ router.post('/login/validate', (req, res) => {
       return res.status(401).json({ error: 'Failed to authenticate.' });
     }
 
+    console.log(user);
+
     // Set data in the session
     req.session.name = user.name;
     req.session.email = user.email;
@@ -249,9 +251,6 @@ router.get('/signout', (req, res) => {
   // Remove the session
   req.session.destroy();
 
-  // Clear local storage
-  // localStorage.clear();
-
   // Redirect to `/`
   res.redirect(302, '/');
 });
@@ -264,6 +263,7 @@ router.get('/signout', (req, res) => {
  **/
 router.post('/getKeys', csrfCheck, sessionCheck, (req, res) => {
   const user = db.get('users').find({ email: req.session.email }).value();
+
   res.json(user || {});
 });
 
@@ -297,7 +297,9 @@ router.post('/removeKey', csrfCheck, sessionCheck, (req, res) => {
  */
 router.get('/resetDB', (req, res) => {
   db.set('users', []).write();
+
   const users = db.get('users').value();
+
   res.json(users);
 });
 
@@ -315,7 +317,7 @@ router.get('/resetDB', (req, res) => {
        id: String,
        name: String
      },
-     publicKeyCredParams: [{  // @herrjemand
+     publicKeyCredParams: [{
        type: 'public-key', alg: -7
      }],
      timeout: Number,
