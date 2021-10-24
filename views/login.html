@@ -46,6 +46,7 @@
 
                 <div class="text-center mt-4">
                     <button type="submit" class="btn btn-primary-theme w-50">Login</button>
+                    <button type="button" id="cancel" class="btn btn-danger w-50 mt-2">Cancel</button>
                 </div>
             </form>
         </div>
@@ -57,6 +58,7 @@
 
         const form = document.querySelector('#form');
         const submitBtn = document.querySelector('button[type=submit]');
+        const cancelBtn = document.querySelector('#cancel');
 
         // Disable button
         submitBtn.disabled = true;
@@ -93,6 +95,15 @@
                 }).catch(e => {
                     alert("Failed to authenticate");
                 });
+        });
+
+        /**
+         * Cancellation event listener
+         */
+        cancelBtn.addEventListener('click', e => {
+            e.preventDefault();
+
+            location.href = '/';
         });
     </script>
 </body>
